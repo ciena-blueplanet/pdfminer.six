@@ -12,8 +12,6 @@ from .pdftypes import PDFObjRef
 from .pdftypes import int_value
 from .pdftypes import dict_value
 
-log = logging.getLogger(__name__)
-
 
 ##  Exceptions
 ##
@@ -122,7 +120,6 @@ class PDFParser(PSStackParser):
                     data += line
             self.seek(pos+objlen)
             # XXX limit objlen not to exceed object boundary
-            log.debug('Stream: pos=%d, objlen=%d, dic=%r, data=%r...', pos, objlen, dic, data[:10])
             obj = PDFStream(dic, data, self.doc.decipher)
             self.push((pos, obj))
 

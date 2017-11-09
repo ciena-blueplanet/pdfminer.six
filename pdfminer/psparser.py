@@ -10,8 +10,6 @@ import six  # Python 2+3 compatibility
 from . import settings
 from .utils import choplist
 
-log = logging.getLogger(__name__)
-
 
 ##  PS Exceptions
 ##
@@ -200,14 +198,12 @@ class PSBaseParser(object):
         if not pos:
             pos = self.bufpos+self.charpos
         self.fp.seek(pos)
-        log.info('poll(%d): %r', pos, self.fp.read(n))
         self.fp.seek(pos0)
         return
 
     def seek(self, pos):
         """Seeks the parser to the given position.
         """
-        log.debug('seek: %r', pos)
         self.fp.seek(pos)
         # reset the status for nextline()
         self.bufpos = pos
@@ -257,7 +253,6 @@ class PSBaseParser(object):
             else:
                 linebuf += self.buf[self.charpos:]
                 self.charpos = len(self.buf)
-        log.debug('nextline: %r, %r', linepos, linebuf)
 
         return (linepos, linebuf)
 
@@ -500,7 +495,6 @@ class PSBaseParser(object):
             self.fillbuf()
             self.charpos = self._parse1(self.buf, self.charpos)
         token = self._tokens.pop(0)
-        log.debug('nexttoken: %r', token)
         return token
 
 
@@ -540,17 +534,12 @@ class PSStackParser(PSBaseParser):
         return objs
 
     def add_results(self, *objs):
-        try:
-            log.debug('add_results: %r', objs)
-        except:
-            log.debug('add_results: (unprintable object)')
         self.results.extend(objs)
         return
 
     def start_type(self, pos, type):
         self.context.append((pos, self.curtype, self.curstack))
         (self.curtype, self.curstack) = (type, [])
-        log.debug('start_type: pos=%r, type=%r', pos, type)
         return
 
     def end_type(self, type):
@@ -558,7 +547,6 @@ class PSStackParser(PSBaseParser):
             raise PSTypeError('Type mismatch: %r != %r' % (self.curtype, type))
         objs = [obj for (_, obj) in self.curstack]
         (pos, self.curtype, self.curstack) = self.context.pop()
-        log.debug('end_type: pos=%r, type=%r, objs=%r', pos, type, objs)
         return (pos, objs)
 
     def do_keyword(self, pos, token):
@@ -612,19 +600,12 @@ class PSStackParser(PSBaseParser):
                     if settings.STRICT:
                         raise
             elif isinstance(token,PSKeyword):
-                log.debug('do_keyword: pos=%r, token=%r, stack=%r', pos, token, self.curstack)
                 self.do_keyword(pos, token)
             else:
-                log.error('unknown token: pos=%r, token=%r, stack=%r', pos, token, self.curstack)
                 self.do_keyword(pos, token)
                 raise
             if self.context:
                 continue
             else:
                 self.flush()
-        obj = self.results.pop(0)
-        try:
-            log.debug('nextobject: %r', obj)
-        except:
-            log.debug('nextobject: (unprintable object)')
-        return obj
+        return self.results.pop(0)

@@ -33,7 +33,6 @@ from .utils import MATRIX_IDENTITY
 
 import six  # Python 2+3 compatibility
 
-log = logging.getLogger(__name__)
 
 ##  Exceptions
 ##
@@ -178,7 +177,6 @@ class PDFResourceManager(object):
         if objid and objid in self._cached_fonts:
             font = self._cached_fonts[objid]
         else:
-            log.info('get_font: create: objid=%r, spec=%r', objid, spec)
             if settings.STRICT:
                 if spec['Type'] is not LITERAL_FONT:
                     raise PDFFontError('Type is not /Font')
@@ -352,7 +350,6 @@ class PDFPageInterpreter(object):
             else:
                 return PREDEFINED_COLORSPACE.get(name)
         for (k, v) in six.iteritems(dict_value(resources)):
-            log.debug('Resource: %r: %r', k, v)
             if k == 'Font':
                 for (fontid, spec) in six.iteritems(dict_value(v)):
                     objid = None
@@ -814,7 +811,6 @@ class PDFPageInterpreter(object):
             if settings.STRICT:
                 raise PDFInterpreterError('Undefined xobject id: %r' % xobjid)
             return
-        log.info('Processing xobj: %r', xobj)
         subtype = xobj.get('Subtype')
         if subtype is LITERAL_FORM and 'BBox' in xobj:
             interpreter = self.dup()
@@ -838,7 +834,6 @@ class PDFPageInterpreter(object):
         return
 
     def process_page(self, page):
-        log.info('Processing page: %r', page)
         (x0, y0, x1, y1) = page.mediabox
         if page.rotate == 90:
             ctm = (0, -1, 1, 0, -y0, x1)
@@ -857,8 +852,6 @@ class PDFPageInterpreter(object):
     #   Render the content streams.
     #   This method may be called recursively.
     def render_contents(self, resources, streams, ctm=MATRIX_IDENTITY):
-        log.info('render_contents: resources=%r, streams=%r, ctm=%r',
-                 resources, streams, ctm)
         self.init_resources(resources)
         self.init_state(ctm)
         self.execute(list_value(streams))
@@ -883,11 +876,9 @@ class PDFPageInterpreter(object):
                     nargs = six.get_function_code(func).co_argcount-1
                     if nargs:
                         args = self.pop(nargs)
-                        log.debug('exec: %s %r', name, args)
                         if len(args) == nargs:
                             func(*args)
                     else:
-                        log.debug('exec: %s', name)
                         func()
                 else:
                     if settings.STRICT:
